@@ -1,0 +1,9 @@
+{
+  "action": "workflow_dispatch",
+  "inputs": {
+      "environment": "dev",
+      "api": "true",
+      "worker1": "false",
+      "worker2": "true"
+  }
+}

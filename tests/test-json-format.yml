@@ -1,0 +1,53 @@
+name: Test JSON format output
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Inject workflow_dispatch inputs into event payload
+        run: |
+          cat > "$GITHUB_EVENT_PATH" << 'EOF'
+          {
+            "action": "workflow_dispatch",
+            "inputs": {
+              "service_a": "true",
+              "service_b": "false",
+              "service_c": "true"
+            }
+          }
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          format: json
+
+      - name: Assert JSON output is valid and contains correct items
+        env:
+          SELECTED: ${{ steps.action.outputs.selected }}
+        run: |
+          echo "selected: '$SELECTED'"
+          # Output should be a valid JSON array
+          if ! echo "$SELECTED" | python3 -c "import sys, json; data = json.load(sys.stdin); assert isinstance(data, list)" 2>/dev/null; then
+            echo "FAIL: output is not a valid JSON array"
+            exit 1
+          fi
+          # service_b is false, so it must NOT appear
+          if echo "$SELECTED" | grep -q "service_b"; then
+            echo "FAIL: service_b was false but appeared in JSON output"
+            exit 1
+          fi
+          # service_a and service_c are true, so they SHOULD appear
+          if ! echo "$SELECTED" | grep -q "service_a"; then
+            echo "FAIL: service_a was true but did not appear in JSON output"
+            exit 1
+          fi
+          if ! echo "$SELECTED" | grep -q "service_c"; then
+            echo "FAIL: service_c was true but did not appear in JSON output"
+            exit 1
+          fi
+          echo "PASS: JSON output='$SELECTED'"

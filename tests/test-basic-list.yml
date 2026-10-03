@@ -1,0 +1,48 @@
+name: Test basic list output
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Inject workflow_dispatch inputs into event payload
+        run: |
+          cat > "$GITHUB_EVENT_PATH" << 'EOF'
+          {
+            "action": "workflow_dispatch",
+            "inputs": {
+              "api": "true",
+              "worker1": "false",
+              "worker2": "true"
+            }
+          }
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          format: list
+
+      - name: Assert selected contains checked items and not unchecked
+        env:
+          SELECTED: ${{ steps.action.outputs.selected }}
+        run: |
+          echo "selected: '$SELECTED'"
+          # worker1 is false, so it must NOT appear in the output
+          if echo "$SELECTED" | grep -qw "worker1"; then
+            echo "FAIL: worker1 was false but appeared in selected"
+            exit 1
+          fi
+          # api and worker2 are true, so they SHOULD appear
+          if ! echo "$SELECTED" | grep -qw "api"; then
+            echo "FAIL: api was true but did not appear in selected"
+            exit 1
+          fi
+          if ! echo "$SELECTED" | grep -qw "worker2"; then
+            echo "FAIL: worker2 was true but did not appear in selected"
+            exit 1
+          fi
+          echo "PASS: selected='$SELECTED'"

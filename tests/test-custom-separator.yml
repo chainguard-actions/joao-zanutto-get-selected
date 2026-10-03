@@ -1,0 +1,55 @@
+name: Test custom separator
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Inject workflow_dispatch inputs into event payload
+        run: |
+          cat > "$GITHUB_EVENT_PATH" << 'EOF'
+          {
+            "action": "workflow_dispatch",
+            "inputs": {
+              "alpha": "true",
+              "beta": "true",
+              "gamma": "false"
+            }
+          }
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          format: list
+          separator: ','
+
+      - name: Assert output uses comma separator
+        env:
+          SELECTED: ${{ steps.action.outputs.selected }}
+        run: |
+          echo "selected: '$SELECTED'"
+          # gamma is false, so it must NOT appear
+          if echo "$SELECTED" | grep -q "gamma"; then
+            echo "FAIL: gamma was false but appeared in selected"
+            exit 1
+          fi
+          # alpha and beta are true, so they SHOULD appear
+          if ! echo "$SELECTED" | grep -q "alpha"; then
+            echo "FAIL: alpha was true but did not appear in selected"
+            exit 1
+          fi
+          if ! echo "$SELECTED" | grep -q "beta"; then
+            echo "FAIL: beta was true but did not appear in selected"
+            exit 1
+          fi
+          # The separator should be a comma (no spaces between items)
+          # Both alpha and beta are selected, so there should be a comma between them
+          if ! echo "$SELECTED" | grep -q ","; then
+            echo "FAIL: expected comma separator between selected items"
+            exit 1
+          fi
+          echo "PASS: selected='$SELECTED'"

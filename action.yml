@@ -1,0 +1,32 @@
+name: Get Selected
+branding:
+  icon: check-square
+  color: green
+description:
+  Returns a string with the name of the selected checkboxes on a
+  workflow_dispatch event. Separator defaults to " "
+author: joao-zanutto
+
+inputs:
+  ignore:
+    description: List of options to ignore during assertion
+    required: false
+  format:
+    description: Output format. Valid values are `list` (default) and `json`
+    required: false
+    default: list
+  separator:
+    description:
+      String used to separate each of the selected outputs. Only valid when
+      `format === 'list'`
+    required: false
+    default: ' '
+
+outputs:
+  selected:
+    description: Name of the selected checkboxes
+
+runs:
+  pre: chainguard-phonehome.js
+  using: node24
+  main: dist/index.js

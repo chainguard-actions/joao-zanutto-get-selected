@@ -1,0 +1,50 @@
+name: Test ignore input
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Inject workflow_dispatch inputs into event payload
+        run: |
+          cat > "$GITHUB_EVENT_PATH" << 'EOF'
+          {
+            "action": "workflow_dispatch",
+            "inputs": {
+              "deploy_api": "true",
+              "deploy_worker": "true",
+              "environment": "dev"
+            }
+          }
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          format: list
+          ignore: environment,deploy_worker
+
+      - name: Assert ignored inputs are excluded from output
+        env:
+          SELECTED: ${{ steps.action.outputs.selected }}
+        run: |
+          echo "selected: '$SELECTED'"
+          # 'environment' is in the ignore list, must NOT appear
+          if echo "$SELECTED" | grep -qw "environment"; then
+            echo "FAIL: 'environment' was in ignore list but appeared in selected"
+            exit 1
+          fi
+          # 'deploy_worker' is in the ignore list, must NOT appear even though it's true
+          if echo "$SELECTED" | grep -qw "deploy_worker"; then
+            echo "FAIL: 'deploy_worker' was in ignore list but appeared in selected"
+            exit 1
+          fi
+          # 'deploy_api' is true and NOT ignored, so it SHOULD appear
+          if ! echo "$SELECTED" | grep -qw "deploy_api"; then
+            echo "FAIL: 'deploy_api' was true and not ignored but did not appear in selected"
+            exit 1
+          fi
+          echo "PASS: selected='$SELECTED'"
