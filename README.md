@@ -6,9 +6,9 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 ## Versions
 
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| v2.0.0 | [`v2.0.0`](https://github.com/chainguard-actions/joao-zanutto-get-selected/tree/v2.0.0) | [`5b85fbc`](https://github.com/joao-zanutto/get-selected/commit/5b85fbc765ce451d2d15116653534de49d5c17cf) |
+| Version | Tag | Upstream commit | Hardening report |
+|---------|-----|-----------------|------------------|
+| v2.0.0 | [`v2.0.0`](https://github.com/chainguard-actions/joao-zanutto-get-selected/tree/v2.0.0) | [`5b85fbc`](https://github.com/joao-zanutto/get-selected/commit/5b85fbc765ce451d2d15116653534de49d5c17cf) | [`HARDENING.md`](https://github.com/chainguard-actions/joao-zanutto-get-selected/blob/v2.0.0/HARDENING.md) |
 
 ## Privacy
 
